@@ -15,7 +15,6 @@ args = parser.parse_args()
 def shash(s): return hashlib.sha1(s).hexdigest()[:16]
 def basename(s): return s.split("/")[-1]
 def extension(s): return s.split(".")[-1]
-
 def lowercase(n): return n.decode('utf-8').lower().encode('utf-8')
 
 def isvalidphoto(fname):
@@ -113,8 +112,8 @@ for d in photo_dirs:
 	for x in photos:
 		# Copy photo if necessary
 		if args.copy:
-			fn = os.path.join(args.out,"img",shash(x)+"."+extension(x))
-			open(fn,"wb").write(open(x,"rb").read())
+			fn = os.path.join("img",shash(x)+"."+lowercase(extension(x)))
+			open(os.path.join(args.out,fn),"wb").write(open(x,"rb").read())
 		else:
 			fn = x
 		plist.append('<p><img class="fit lazy" data-original="%s"/></p>'%fn)
