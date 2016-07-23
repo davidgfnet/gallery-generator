@@ -33,4 +33,13 @@ body {
 
 .fit {
   width: 100%;
+  padding-top: 4px;
 }
+
+imgdiv {
+}
+
+img {
+  image-orientation: from-image;
+}
+

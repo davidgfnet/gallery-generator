@@ -1,14 +1,37 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import argparse
 import hashlib
 import shutil
+from PIL import Image, ExifTags
 
 parser = argparse.ArgumentParser(description='Create a photo gallery out of a bunch of images folders')
 parser.add_argument('--dir', dest='dir', action='store', help='Directory to process')
 parser.add_argument('-o','--output', dest='out', action='store', help='Directory to output the gallery')
 parser.add_argument('--extensions', dest='ext', action='store', default="jpg,jpeg,gif,png,tiff,tif,bmp,svg", help='List of accepted photo extensions')
 parser.add_argument('--copy', dest='copy', action='store_true', default=False, help='Copy images to the web gallery (instead of linking them)')
+parser.add_argument('--thumbnails', dest='thumbs', action='store_true', default=False, help='Create thumbnails for the pictures')
+
+# The gallery will be quite big, ideally three cloumns on lg, two on md and one sm and below
+# Will create a thumbnail for each photo (if specified) which should be around 800px width
+
+def rotimg(image):
+	if hasattr(image, '_getexif'): # only present in JPEGs
+		for orientation in ExifTags.TAGS.keys(): 
+			if ExifTags.TAGS[orientation]=='Orientation':
+				break 
+		e = image._getexif()       # returns None if no EXIF data
+		if e is not None:
+			exif=dict(e.items())
+			orientation = exif[orientation] 
+
+			if orientation == 3:   image = image.transpose(Image.ROTATE_180)
+			elif orientation == 6: image = image.transpose(Image.ROTATE_270)
+			elif orientation == 8: image = image.transpose(Image.ROTATE_90)
+
+	return image
 
 args = parser.parse_args()
 
@@ -113,10 +136,21 @@ for d in photo_dirs:
 		# Copy photo if necessary
 		if args.copy:
 			fn = os.path.join("img",shash(x)+"."+lowercase(extension(x)))
-			open(os.path.join(args.out,fn),"wb").write(open(x,"rb").read())
+			fn_thumb = os.path.join("img",shash(x)+"_thumb.jpg")
+			fn_fullpath = os.path.join(args.out,fn)
+			open(fn_fullpath,"wb").write(open(x,"rb").read())
 		else:
 			fn = x
-		plist.append('<p><img class="fit lazy" data-original="%s"/></p>'%fn)
+		# Take thumbnail if necessary
+		if args.thumbs:
+			fn_thumb_fullpath = os.path.join(args.out,fn_thumb)
+			im = rotimg(Image.open(fn_fullpath))
+			im.thumbnail((800, 800), Image.ANTIALIAS)
+			im.save(fn_thumb_fullpath, "JPEG", quality=60)
+		else:
+			fn_thumb = fn
+
+		plist.append('<div class="imgdiv col-sm-12 col-md-6 col-lg-4"><a href="%s" target="_blank"><img class="fit lazy" data-original="%s"/></a></div>' % (fn, fn_thumb))
 	plist = "\n".join(plist)
 
 	nav = doheader(d)
