@@ -8,8 +8,8 @@ import shutil
 from PIL import Image, ExifTags
 
 parser = argparse.ArgumentParser(description='Create a photo gallery out of a bunch of images folders')
-parser.add_argument('--dir', dest='dir', action='store', help='Directory to process')
-parser.add_argument('-o','--output', dest='out', action='store', help='Directory to output the gallery')
+parser.add_argument('--dir', dest='dir', required=True, action='store', help='Directory to process')
+parser.add_argument('-o','--output', dest='out', action='store', required=True, help='Directory to output the gallery')
 parser.add_argument('--extensions', dest='ext', action='store', default="jpg,jpeg,gif,png,tiff,tif,bmp,svg", help='List of accepted photo extensions')
 parser.add_argument('--copy', dest='copy', action='store_true', default=False, help='Copy images to the web gallery (instead of linking them)')
 parser.add_argument('--thumbnails', dest='thumbs', action='store_true', default=False, help='Create thumbnails for the pictures')
