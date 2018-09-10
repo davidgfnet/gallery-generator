@@ -5,7 +5,9 @@ import os
 import argparse
 import hashlib
 import shutil
-from PIL import Image, ExifTags
+from PIL import Image, ExifTags, ImageFile
+from tqdm import tqdm
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 parser = argparse.ArgumentParser(description='Create a photo gallery out of a bunch of images folders')
 parser.add_argument('--dir', dest='dir', required=True, action='store', help='Directory to process')
@@ -25,7 +27,7 @@ def rotimg(image):
 		e = image._getexif()       # returns None if no EXIF data
 		if e is not None:
 			exif=dict(e.items())
-			orientation = exif[orientation] 
+			orientation = exif.get(orientation, 0)
 
 			if orientation == 3:   image = image.transpose(Image.ROTATE_180)
 			elif orientation == 6: image = image.transpose(Image.ROTATE_270)
@@ -132,25 +134,28 @@ for d in photo_dirs:
 	photos = sorted(get_photos(d))
 
 	plist = []
-	for x in photos:
-		# Copy photo if necessary
-		if args.copy:
-			fn = os.path.join("img",shash(x)+"."+lowercase(extension(x)))
-			fn_thumb = os.path.join("img",shash(x)+"_thumb.jpg")
-			fn_fullpath = os.path.join(args.out,fn)
-			open(fn_fullpath,"wb").write(open(x,"rb").read())
-		else:
-			fn = x
-		# Take thumbnail if necessary
-		if args.thumbs:
-			fn_thumb_fullpath = os.path.join(args.out,fn_thumb)
-			im = rotimg(Image.open(fn_fullpath))
-			im.thumbnail((800, 800), Image.ANTIALIAS)
-			im.save(fn_thumb_fullpath, "JPEG", quality=60)
-		else:
-			fn_thumb = fn
+	for x in tqdm(photos):
+		try:
+			# Copy photo if necessary
+			if args.copy:
+				fn = os.path.join("img",shash(x)+"."+lowercase(extension(x)))
+				fn_thumb = os.path.join("img",shash(x)+"_thumb.jpg")
+				fn_fullpath = os.path.join(args.out,fn)
+				open(fn_fullpath,"wb").write(open(x,"rb").read())
+			else:
+				fn = x
+			# Take thumbnail if necessary
+			if args.thumbs:
+				fn_thumb_fullpath = os.path.join(args.out,fn_thumb)
+				im = rotimg(Image.open(fn_fullpath))
+				im.thumbnail((800, 800), Image.ANTIALIAS)
+				im.save(fn_thumb_fullpath, "JPEG", quality=60)
+			else:
+				fn_thumb = fn
 
-		plist.append('<div class="imgdiv col-sm-12 col-md-6 col-lg-4"><a href="%s" target="_blank"><img class="fit lazy" data-original="%s"/></a></div>' % (fn, fn_thumb))
+			plist.append('<div class="imgdiv col-sm-12 col-md-6 col-lg-4"><a href="%s" target="_blank"><img class="fit lazy" data-original="%s"/></a></div>' % (fn, fn_thumb))
+		except:
+			print "Could not read image", x
 	plist = "\n".join(plist)
 
 	nav = doheader(d)
@@ -161,7 +166,5 @@ for d in photo_dirs:
 # Copy support files
 for e in ["css","js","fonts"]:
 	shutil.copytree(os.path.join("bs",e), os.path.join(args.out,e))
-
-
 
 
