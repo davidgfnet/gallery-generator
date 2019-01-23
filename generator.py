@@ -1,10 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os
-import argparse
-import hashlib
-import shutil
+import os, argparse, re, hashlib, shutil
 from PIL import Image, ExifTags, ImageFile
 from tqdm import tqdm
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -86,18 +83,6 @@ def get_dir_hier(path):
 		r.append(p)
 		c = p
 	return r
-		
-
-# Returns a set of dirs which will be a gallery
-# (leaf dir + some photos there)
-def get_gallery_dirs(path):
-	dirs = get_dirs(path)
-	dirs = [ x for x in dirs if contains_photos(x) and not contains_dir(x) ]
-	return dirs
-def get_nav_dirs(path):
-	dirs = get_dirs(path)
-	dirs = [ x for x in dirs if not contains_photos(x) and contains_dir(x) ]
-	return dirs
 
 def doheader(path):
 	nav = path[len(args.dir):]
@@ -109,29 +94,27 @@ def doheader(path):
 	nav = " > ".join(['<a href="index.html">Index</a>'] + nav)
 	return nav
 
+def dobrowse(path):
+	# Generate a document for each
+	dirs = sorted(get_child_dirs(path))
+	plist = "\n".join(['<a class="btn btn-primary btn-padding" href="%s.html" role="button">%s</a>' %
+						(shash(x),basename(x)) for x in dirs ])
+	return plist
+
+
 os.mkdir(args.out)
 os.mkdir(os.path.join(args.out,"img"))
 
-# Generate index pages
-nav_dirs = get_nav_dirs(args.dir) + [args.dir]
-template = open(os.path.join("bs","dir-template.html"),"rb").read()
-for d in nav_dirs:
-	# Generate a document for each
-	dirs = sorted(get_child_dirs(d))
-	plist = "\n".join([ '<a class="btn btn-primary btn-padding" href="%s.html" role="button">%s</a>'%(shash(x),basename(x)) for x in dirs ])
-
-	# Nav var
-	nav = doheader(d)
-
-	page = template.replace("{DIRS}", plist).replace("{TITLE}", nav)
-	name = shash(d) if d != args.dir else "index"
-	open(os.path.join(args.out,name+".html"),"wb").write(page)
-
 # Generate gallery pages
-photo_dirs = get_gallery_dirs(args.dir)
-template = open(os.path.join("bs","gal-template.html"),"rb").read()
+photo_dirs = get_dirs(args.dir) + [args.dir]
+template = open(os.path.join("bs","template.html"),"rb").read()
 for d in photo_dirs:
+	page = template
 	photos = sorted(get_photos(d))
+	subdirs = dobrowse(d)
+
+	page = re.sub("{IMGSECTION(.*)/IMGSECTION}", r"\1" if photos else "", page, flags=re.DOTALL)
+	page = re.sub("{DIRSECTION(.*)/DIRSECTION}", r"\1" if subdirs else "", page, flags=re.DOTALL)
 
 	plist = []
 	for x in tqdm(photos):
@@ -158,10 +141,10 @@ for d in photo_dirs:
 			print "Could not read image", x
 	plist = "\n".join(plist)
 
-	nav = doheader(d)
-
-	page = template.replace("{IMAGES}", plist).replace("{TITLE}", nav)
-	open(os.path.join(args.out,shash(d)+".html"),"wb").write(page)
+	# Special care with index
+	name = shash(d) if d != args.dir else "index"
+	page = page.replace("{IMAGES}", plist).replace("{TITLE}", doheader(d)).replace("{DIRS}", subdirs)
+	open(os.path.join(args.out,name+".html"),"wb").write(page)
 
 # Copy support files
 for e in ["css","js","fonts"]:
