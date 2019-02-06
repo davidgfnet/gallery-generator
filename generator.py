@@ -131,12 +131,12 @@ for d in photo_dirs:
 			if args.thumbs:
 				fn_thumb_fullpath = os.path.join(args.out,fn_thumb)
 				im = rotimg(Image.open(fn_fullpath))
-				im.thumbnail((800, 800), Image.ANTIALIAS)
+				im.thumbnail((600, 600), Image.ANTIALIAS)
 				im.save(fn_thumb_fullpath, "JPEG", quality=60)
 			else:
 				fn_thumb = fn
 
-			plist.append('<div class="imgdiv col-sm-12 col-md-6 col-lg-4"><a href="%s" target="_blank"><img class="fit lazy" data-original="%s"/></a></div>' % (fn, fn_thumb))
+			plist.append('<a href="%s"><img src="%s"/></a>' % (fn, fn_thumb))
 		except:
 			print "Could not read image", x
 	plist = "\n".join(plist)
