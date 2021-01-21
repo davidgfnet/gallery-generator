@@ -34,14 +34,13 @@ def rotimg(image):
 
 args = parser.parse_args()
 
-def shash(s): return hashlib.sha1(s).hexdigest()[:16]
+def shash(s): return hashlib.sha1(s.encode('utf-8')).hexdigest()[:16]
 def basename(s): return s.split("/")[-1]
 def extension(s): return s.split(".")[-1]
-def lowercase(n): return n.decode('utf-8').lower().encode('utf-8')
 
 def isvalidphoto(fname):
 	for x in args.ext.split(","):
-		if lowercase(fname).endswith(x):
+		if fname.lower().endswith(x):
 			return True
 	return False
 
@@ -107,7 +106,7 @@ os.mkdir(os.path.join(args.out,"img"))
 
 # Generate gallery pages
 photo_dirs = get_dirs(args.dir) + [args.dir]
-template = open(os.path.join("bs","template.html"),"rb").read()
+template = open(os.path.join("bs","template.html"),"rb").read().decode("utf-8")
 for d in photo_dirs:
 	page = template
 	photos = sorted(get_photos(d))
@@ -121,8 +120,8 @@ for d in photo_dirs:
 		try:
 			# Copy photo if necessary
 			if args.copy:
-				fn = os.path.join("img",shash(x)+"."+lowercase(extension(x)))
-				fn_thumb = os.path.join("img",shash(x)+"_thumb.jpg")
+				fn = os.path.join("img",shash(x)+"."+extension(x).lower())
+				fn_thumb = os.path.join("img",shash(x)+"_thumb.webp")
 				fn_fullpath = os.path.join(args.out,fn)
 				open(fn_fullpath,"wb").write(open(x,"rb").read())
 			else:
@@ -132,19 +131,19 @@ for d in photo_dirs:
 				fn_thumb_fullpath = os.path.join(args.out,fn_thumb)
 				im = rotimg(Image.open(fn_fullpath))
 				im.thumbnail((600, 600), Image.ANTIALIAS)
-				im.save(fn_thumb_fullpath, "JPEG", quality=60)
+				im.save(fn_thumb_fullpath, "WEBP", quality=60)
 			else:
 				fn_thumb = fn
 
 			plist.append('<a href="%s"><img src="%s"/></a>' % (fn, fn_thumb))
 		except:
-			print "Could not read image", x
+			print("Could not read image", x)
 	plist = "\n".join(plist)
 
 	# Special care with index
 	name = shash(d) if d != args.dir else "index"
 	page = page.replace("{IMAGES}", plist).replace("{TITLE}", doheader(d)).replace("{DIRS}", subdirs)
-	open(os.path.join(args.out,name+".html"),"wb").write(page)
+	open(os.path.join(args.out,name+".html"),"wb").write(page.encode("utf-8"))
 
 # Copy support files
 for e in ["css","js","fonts"]:
