@@ -27,6 +27,16 @@
         if (!Cookies.get('zoomlevel'))
           Cookies.set('zoomlevel', 2);
         zoomupd();
+
+        $("#video-gallery").justifiedGallery({
+           rowHeight : 128,
+           lastRow : 'nojustify',
+           margins : 1
+        }).on('jg.complete', function() {
+           $("#video-gallery").lightGallery();
+        });
+
+
       });
 
       function zoomupd() {
@@ -98,6 +108,15 @@
           </div>
         </div>
         /IMGSECTION}
+
+        {VIDSECTION
+        <div class="dir-view row">
+          {VIDEOSSRC}
+          <ul id="video-gallery" class="list-unstyled">
+            {VIDEOS}
+          </ul>
+        </div>
+        /VIDSECTION}
 
       </div>
 

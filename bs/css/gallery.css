@@ -40,6 +40,12 @@ body {
 -moz-osx-font-smoothing: grayscale;
 }
 
+.vpad {
+ padding-left: 1px;
+ padding-bottom: 1px;
+ padding-top: 1px;
+ padding-right: 1px;
+}
 
 .form-login {
 }
