@@ -102,7 +102,7 @@ def dobrowse(path):
 
 
 os.mkdir(args.out)
-os.mkdir(os.path.join(args.out,"img"))
+os.mkdir(os.path.join(args.out,"images"))
 
 # Generate gallery pages
 photo_dirs = get_dirs(args.dir) + [args.dir]
@@ -120,8 +120,8 @@ for d in photo_dirs:
 		try:
 			# Copy photo if necessary
 			if args.copy:
-				fn = os.path.join("img",shash(x)+"."+extension(x).lower())
-				fn_thumb = os.path.join("img",shash(x)+"_thumb.webp")
+				fn = os.path.join("images",shash(x)+"."+extension(x).lower())
+				fn_thumb = os.path.join("images",shash(x)+"_thumb.webp")
 				fn_fullpath = os.path.join(args.out,fn)
 				open(fn_fullpath,"wb").write(open(x,"rb").read())
 			else:
@@ -146,7 +146,7 @@ for d in photo_dirs:
 	open(os.path.join(args.out,name+".html"),"wb").write(page.encode("utf-8"))
 
 # Copy support files
-for e in ["css","js","fonts"]:
+for e in ["css", "js", "fonts", "img"]:
 	shutil.copytree(os.path.join("bs",e), os.path.join(args.out,e))
 
 
